@@ -27,3 +27,4 @@ rule all:
 
 include: "rules/fastQC.smk"
 include: "rules/align.smk"
+#include: "rules/mergebams.smk"

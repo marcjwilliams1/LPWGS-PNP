@@ -1,5 +1,12 @@
-_merge_files(wildcards):
-    return glob(wildcards.prefix + "_S[0-9]+\_L[0-9]+\.bam")
+def _merge_files(wildcards):
+    return glob("tempbams/" + wildcards.sample + "*.bam")
+def _split_file(wildcards):
+    wildcards.sample.split("_")[0]
+
+
+
+def _merge_files(wildcards):
+    return glob("tempbams/" + wildcards + "_S[0-9]+\_L[0-9]+\.bam")
 
 rule picard_merge_bam:
     input: _merge_files(wildcards)

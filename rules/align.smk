@@ -4,7 +4,7 @@ rule align:
         R2=config["fastqfiles"] + "{file}_R2_001.fastq.gz",
     output:
         "tempbams/{file}.bam"
-    threads: 2
+    threads: 1
     params:
         genome=config["genome"]
     shell:
@@ -18,7 +18,8 @@ rule align:
         readgroup="@RG\\tID:${{array[0]}}\\tLB:${{array[0]}}\\tSM:${{array[0]}}\\tPL:ILLUMINA"
         echo $readgroup
 
-        bwa mem -M -R ${{readgroup}} {params.genome} \
+        bwa mem -M -R -t {threads} \
+        ${{readgroup}} {params.genome} \
         {input.R1} {input.R2} | \
         samtools view -S -b -q 37 - > {output}
         """
