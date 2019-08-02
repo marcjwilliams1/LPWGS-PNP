@@ -5,3 +5,4 @@
 fastqfiles: "/data/BCI-EvoCa2/marc/anisha/fastqfiles/"
 log_dir: "logs/"
 genome: "/data/BCI-EvoCa2/marc/refs/hg19/ucsc.hg19.fasta"
+binsize: "500"
