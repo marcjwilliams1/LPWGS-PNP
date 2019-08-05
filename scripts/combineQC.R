@@ -19,7 +19,7 @@ dfWGS <- data.frame()
 for (file in args$WGS){
   print(file)
   metrics <- read.table(file, sep="\t" , header=T)
-  samplename = strsplit(file,"metrics")[[1]][1]
+  samplename = strsplit(basename(file),"[.]")[[1]][1]
   dfWGS <- rbind(dfWGS, metrics %>% mutate(samplename = samplename))
 }
 print(dfWGS)
@@ -28,7 +28,7 @@ dfinsertsize <- data.frame()
 for (file in args$insertsize){
   print(file)
   metrics <- read.table(file, sep="\t" , header=T)
-  samplename = strsplit(file,"metrics")[[1]][1]
+  samplename = strsplit(basename(file),"[.]")[[1]][1]
   dfinsertsize <- rbind(dfinsertsize, metrics %>% mutate(samplename = samplename))
 }
 print(dfinsertsize)
@@ -37,7 +37,7 @@ dfalign <- data.frame()
 for (file in args$align){
   print(file)
   metrics <- read.table(file, sep="\t" , header=T)
-  samplename = strsplit(file,"metrics")[[1]][1]
+  samplename = strsplit(basename(file),"[.]")[[1]][1]
   dfalign <- rbind(dfalign, metrics %>% mutate(samplename = samplename))
 }
 print(dfalign)

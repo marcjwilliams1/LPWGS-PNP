@@ -1,0 +1,38 @@
+---
+title: "QC report for lpWGS"
+author: "Marc J Williams"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+self_contained: false
+params:
+    dfQC: !r data.frame(c(1,2,3))
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+library(tidyverse)
+library(cowplot)
+dfQC <- params$dfQC
+head(dfQC)
+```
+
+```{r coverage, fig.height=6, fig.width=15}
+ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = samplename)) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(yintercept = 0.1, lty = 2, col = 'firebrick')
+```
+
+```{r insertsize, fig.height=6, fig.width=15}
+ggplot(params$dfQC, aes(y = MEAN_INSERT_SIZE, x = samplename)) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```

@@ -39,7 +39,10 @@ rule indexdedupbam:
         java -jar -Xmx4G $PICARD MarkDuplicates \
         INPUT={input.bam} \
         OUTPUT={output.bam} \
-        METRICS_FILE={output.metrics} \
+        METRICS_FILE={output.metrics}.temp \
         CREATE_INDEX=true \
         REMOVE_DUPLICATES=true
+
+	    grep -A2  "## METRICS" {output.metrics}.temp | tail -n +1 > {output.metrics}
+        rm {output.metrics}.temp
         """
