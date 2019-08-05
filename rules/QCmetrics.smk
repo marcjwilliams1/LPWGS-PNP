@@ -1,6 +1,6 @@
 rule QCmetrics:
     input:
-        bam="bams/{sample}.bam",
+        bam="bams/3.final/{sample}.bam",
     output:
         metricsWGS="QC/WGSmetrics/{sample}.txt",
         metricsInsert="QC/Insertmetrics/{sample}.txt",
@@ -54,6 +54,7 @@ rule combineQCmetrics:
             metricsWGS=expand("QC/WGSmetrics/{sample}.txt", sample = SAMPLES),
             metricsInsert=expand("QC/Insertmetrics/{sample}.txt", sample = SAMPLES),
             metricsAlign=expand("QC/alignmentmetrics/{sample}.txt", sample = SAMPLES),
+            metricsDedup=expand("QC/dedupmetrics/{sample}.txt", sample = SAMPLES),
         output:
             "QC/QCresults.csv"
         threads: 1
@@ -64,5 +65,6 @@ rule combineQCmetrics:
                 --WGS {input.metricsWGS} \
                 --insertsize {input.metricsInsert} \
                 --align {input.metricsAlign} \
+                --dedup {input.metricsDedup} \
                 --output {output}
             """

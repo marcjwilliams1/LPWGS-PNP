@@ -1,6 +1,6 @@
 rule CNcalling:
     input:
-        bams=expand("bams/{sample}.bam", sample = SAMPLES)
+        bams=expand("bams/3.final/{sample}.bam", sample = SAMPLES)
     output:
         Rdata="CNcalling/finalresults." + config["binsize"] + ".Rdata",
         segmentfile="CNcalling/finalresults." + config["binsize"] + ".segments.txt",
