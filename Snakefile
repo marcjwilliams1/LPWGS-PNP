@@ -17,6 +17,13 @@ fastqfiles = [f for f in glob.glob(config["fastqfiles"] + "/*.gz", recursive=Tru
 SAMPLES=list(set(SAMPLES))
 #LANES=list(set(LANES))
 
+def _get_matches(wildcards):
+    return glob.glob(config["fastqfiles"] + wildcards.sample + "*.bam")
+
+def _get_matches(x):
+    return glob.glob(config["fastqfiles"] + x + "*R1*.fastq.gz")
+
+
 rule all:
     input:
         expand("fastQC/{file}_R1_001_fastqc.html", file = FILES),

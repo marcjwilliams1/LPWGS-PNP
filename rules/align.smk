@@ -1,3 +1,7 @@
+def _get_matchesR1(wildcards):
+    return glob.glob(config["fastqfiles"] + wildcards.sample + "*R1*.fastq.gz")
+
+
 rule align:
     input:
         R1=config["fastqfiles"] + "{file}_R1_001.fastq.gz",
