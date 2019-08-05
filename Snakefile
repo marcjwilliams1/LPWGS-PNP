@@ -14,6 +14,8 @@ fastqfiles = [f for f in glob.glob(config["fastqfiles"] + "/*.gz", recursive=Tru
 (FILES,)=glob_wildcards(config["fastqfiles"] + "{FILES}_R1_001.fastq.gz")
 (SAMPLES,S,LANES)=glob_wildcards(config["fastqfiles"] + "{SAMPLES}_{S}_{LANES}_R1_001.fastq.gz")
 
+runid=["_{}_{}".format(a_, b_) for a_, b_ in zip(S, LANES)]
+
 SAMPLES=list(set(SAMPLES))
 #LANES=list(set(LANES))
 
@@ -26,12 +28,12 @@ def _get_matches(x):
 
 rule all:
     input:
-        expand("fastQC/{file}_R1_001_fastqc.html", file = FILES),
+        #expand("fastQC/{file}_R1_001_fastqc.html", file = FILES),
         #expand("tempbams/{file}.bam", file = FILES),
         expand("bams/{sample}.bam", sample = SAMPLES),
-        expand("QC/WGSmetrics/{sample}.txt", sample = SAMPLES),
+        #expand("QC/WGSmetrics/{sample}.txt", sample = SAMPLES),
         Rdata="CNcalling/finalresults." + config["binsize"] + ".Rdata",
-        QC="QC/QCresults.csv",
+        #QC="QC/QCresults.csv",
         report="results/reports/QC.html"
         #expand("bams/{sample}.dedup.bam", sample = SAMPLES)
         # The first rule should define the default target files
@@ -39,7 +41,6 @@ rule all:
 
 include: "rules/fastQC.smk"
 include: "rules/align.smk"
-include: "rules/mergebams.smk"
 include: "rules/QCmetrics.smk"
 include: "rules/CNcalling.smk"
 include: "rules/report.smk"
