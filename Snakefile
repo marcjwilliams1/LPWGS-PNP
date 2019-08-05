@@ -20,7 +20,7 @@ SAMPLES=list(set(SAMPLES))
 rule all:
     input:
         expand("fastQC/{file}_R1_001_fastqc.html", file = FILES),
-        #expand("tempbams/{file}.bam", file = FILES),
+        expand("tempbams/{file}.bam", file = FILES),
         expand("bams/{sample}.bam", sample = SAMPLES),
         expand("QC/WGSmetrics/{sample}.txt", sample = SAMPLES),
         Rdata="CNcalling/finalresults." + config["binsize"] + ".Rdata",
