@@ -16,7 +16,7 @@ parser$add_argument('--Rdata', type = 'character',
                     help="Rdata file", default = NULL)
 parser$add_argument('--segmentfile', type = 'character',
                     help="Text file for segments", default = NULL)
-parser$add_argument('--filter', type = 'character',
+parser$add_argument('--filter', type = 'character',nargs = "+",
                     help="Text file for segments", default = NULL)
 args <- parser$parse_args()
 
@@ -31,6 +31,10 @@ print(plotdir)
 if (dir.exists(plotdir) == FALSE){
   dir.create(plotdir, recursive = T)
 }
+
+args$filter <- paste0("-", gsub(",", "-[0-9]+|", args$filter), "[0-9]+")
+print(args$filter)
+print(str_detect(args$bamfiles, args$filter))
 
 args$bamfiles <- args$bamfiles[str_detect(args$bamfiles, args$filter)]
 print(args$bamfiles)
