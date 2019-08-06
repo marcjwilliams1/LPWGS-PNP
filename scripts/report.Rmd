@@ -1,13 +1,14 @@
 ---
-title: "QC report for lpWGS"
+title: "Results report for lpWGS of progressor/non-progressor Adenomas"
 author: "Marc J Williams"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 self_contained: false
 params:
-    dfQC: !r data.frame(c(1,2,3))
-    CNA: !r data.frame(c(1,2,3))
-    plotdir: !r "."
+    dfQC: data.frame(c(1,2,3))
+    CNA: data.frame(c(1,2,3))
+    plotdir: !r getwd()
+    readscutoff: 3e6
 ---
 
 ```{r setup, include = FALSE}
@@ -18,15 +19,18 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r}
+```{r, echo = FALSE}
 library(tidyverse)
 library(cowplot)
 library(QDNAseq)
 dfQC <- params$dfQC
 CNA <- params$CNA
+readscutoff <- as.numeric(params$readscutoff)
 ```
 
-```{r coverage, fig.height=6, fig.width=15}
+## QC plots
+
+```{r coverage, fig.height=6, fig.width=15, echo = FALSE}
 ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = samplename)) +
     geom_bar(stat = "identity") +
     theme_cowplot() +
@@ -34,34 +38,66 @@ ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = samplename)) +
     geom_hline(yintercept = 0.1, lty = 2, col = 'firebrick')
 ```
 
-```{r insertsize, fig.height=6, fig.width=15}
-ggplot(params$dfQC, aes(y = MEAN_INSERT_SIZE, x = samplename)) +
+```{r insertsize, fig.height=6, fig.width=15, echo = FALSE, results = "hide"}
+ggplot(params$dfQC, aes(y = MEDIAN_INSERT_SIZE, x = samplename)) +
     geom_bar(stat = "identity") +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-```{r duplicationrate, fig.height=6, fig.width=15}
+```{r duplicationrate, fig.height=6, fig.width=15, echo = FALSE}
 ggplot(params$dfQC, aes(y = PERCENT_DUPLICATION, x = samplename)) +
     geom_bar(stat = "identity") +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-```{r frequencyplot, fig.height=6, fig.width=15}
+```{r totalreads, fig.height=6, fig.width=15, echo = FALSE}
+ggplot(params$dfQC, aes(y = TOTAL_READS, x = samplename)) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(yintercept = readscutoff, lty = 2, col = 'firebrick')
+```
+
+## Frequency plots
+Frequency plot across whole cohort.
+
+```{r frequencyplot, fig.height=6, fig.width=15, echo = FALSE}
 frequencyPlot(CNA[[7]], gaincol = "firebrick4", losscol = "dodgerblue4")
 ```
 
 ```{r, echo = FALSE}
 samples <- colnames(QDNAseq:::calls(CNA[[7]]))
 
-sampvecremove <- samples[str_detect(samples, "O83|O101|X51|X53")]
-
+sampvecremove1 <- samples[str_detect(samples, "O83|O101|X51|X53")]
+sampvecremove2 <- samples[samples %in% (filter(params$dfQC, TOTAL_READS < readscutoff) %>% pull(samplename))]
+sampvecremove <- unique(c(sampvecremove1, sampvecremove2))
 removesamples <- samples %in% sampvecremove
 
 P <- str_detect(samples, "[0-9]+-A") & !removesamples
 NP <- !str_detect(samples, "[0-9]+-A") & !removesamples
+```
 
+Due to low coverage (`<` `r params$readscutoff` reads) we will remove the following samples:
+```{r, echo = FALSE}
+knitr::kable(filter(params$dfQC, TOTAL_READS < readscutoff) %>% select(samplename, TOTAL_READS, MEAN_COVERAGE, PERCENT_DUPLICATION) %>%
+arrange(TOTAL_READS))
+```
+
+
+```{r, echo = FALSE, results = "hide"}
+print(samples)
+print(sampvecremove)
+print(sampvecremove1)
+print(sampvecremove2)
+print(removesamples)
+print(samples %in% (filter(params$dfQC, TOTAL_READS < readscutoff) %>% pull(samplename)))
+print(filter(params$dfQC, TOTAL_READS < readscutoff) %>% pull(samplename))
+knitr::kable(filter(params$dfQC, TOTAL_READS < readscutoff) %>% select(samplename, TOTAL_READS, MEAN_COVERAGE))
+```
+
+```{r, echo = FALSE}
 x <- CNA[[7]]
 x@phenoData@data <- x@phenoData@data[P, ]
 progressors <- new("QDNAseqCopyNumbers", bins = CNA[[7]]@featureData,
@@ -89,10 +125,12 @@ nonprogressors <- new("QDNAseqCopyNumbers", bins = CNA[[7]]@featureData,
 QDNAseq:::calls(nonprogressors) <- CNA[[7]]@assayData$calls[,NP]
 ```
 
+Frequency plot for progressors.
 ```{r frequencyplot_progressors, fig.height=6, fig.width=15}
 frequencyPlot(progressors, gaincol = "firebrick4", losscol = "dodgerblue4")
 ```
 
+Frequency plot for non-progressors.
 ```{r frequencyplot_nonprogressors, fig.height=6, fig.width=15}
 frequencyPlot(nonprogressors, gaincol = "firebrick4", losscol = "dodgerblue4")
 ```
@@ -109,6 +147,7 @@ getdf <- function(copyNumbersCalled, field = "copynumber", selector = "GC"){
   return(x)
 }
 
+
 plotCNfrequency <- function(CNbins, plotChr = NULL, CN_low_cutoff = 1.5, CN_high_cutoff = 2.5){
 
   cnfreqplot <- CNbins %>%
@@ -124,7 +163,8 @@ plotCNfrequency <- function(CNbins, plotChr = NULL, CN_low_cutoff = 1.5, CN_high
 }
 ```
 
-```{r boxplot}
+
+```{r createdataframe, echo = FALSE}
 #library(ggforce)
 df <- getdf(CNA[[7]], field = "calls") %>%
     filter(!sample %in% sampvecremove) %>%
@@ -132,17 +172,43 @@ df <- getdf(CNA[[7]], field = "calls") %>%
     outcome = ifelse(str_detect(sample, "[0-9]+-A"), "Progressor", "Non-progressor")) %>%
     na.omit() %>%
     group_by(sample, outcome) %>%
-    summarize(altered = sum(calls), tot = n()) %>%
-    mutate(pctaltered = altered / tot)
+    summarize(alteredbins = sum(calls), totbins = n()) %>%
+    mutate(pctaltered = alteredbins / totbins)
 
+df %>%
+    group_by(outcome) %>%
+    summarize(meanpctaltered = mean(pctaltered), nsamples = n()) %>%
+    print()
+```
+
+## Summary table
+
+```{r, echo = FALSE}
+knitr::kable(df)
+```
+
+## Statistical tests
+
+t-test & wilcox test for % altered
+```{r tests}
+test_t <- t.test(pctaltered ~ outcome, data = df)
+print(test_t)
+
+test_w <- wilcox.test(pctaltered ~ outcome, data = df)
+print(test_w)
+```
+
+## Plots
+
+Boxplot for pct altered.
+```{r boxplot, echo = FALSE}
 (gp <- df %>%
   ggplot(aes(x = outcome, y = pctaltered, fill = outcome)) +
   geom_point() +
   geom_boxplot(alpha = 0.7) +
   xlab("") +
   ylab("% Genome altered") +
-  geom_text(aes(x = 1.5, y= 0.15), label = "p = 0.45") +
+  annotate("text", x = 1.5, y= 0.15, label = paste0("p = ", round(test_t$p.value, 3))) +
   scale_fill_manual(values = c("deepskyblue4", "darkorange3")) +
   theme(legend.position="none"))
-
 ```
