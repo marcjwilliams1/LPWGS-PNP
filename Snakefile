@@ -5,7 +5,7 @@ import glob
 
 configfile: "config.yaml"
 report: "report/workflow.rst"
-workdir: "/data/BCI-EvoCa2/marc/anisha/resultsnew/"
+workdir: config["workdirectory"]
 
 # Allow users to fix the underlying OS via singularity.
 #singularity: "docker://continuumio/miniconda3"
@@ -34,7 +34,7 @@ rule all:
         #expand("QC/WGSmetrics/{sample}.txt", sample = SAMPLES),
         Rdata="CNcalling/finalresults." + config["binsize"] + ".Rdata",
         #QC="QC/QCresults.csv",
-        report="results/reports/QC.html"
+        report="reports/results.html"
         #expand("bams/{sample}.dedup.bam", sample = SAMPLES)
         # The first rule should define the default target files
         # Subsequent target rules can be specified below. They should start with all_*.

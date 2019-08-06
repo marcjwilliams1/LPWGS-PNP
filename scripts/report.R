@@ -7,9 +7,14 @@ parser$add_argument('--output', type = 'character',
                     help="Output html file")
 parser$add_argument('--QC', type = 'character',
                     help="QC file")
+parser$add_argument('--CNA', type = 'character',
+                    help="CNA file")
+parser$add_argument('--plotdir', type = 'character',
+                    help="Plotting directory")
 args <- parser$parse_args()
 
 dfQC <- read_csv(args$QC)
+CNA <- readRDS(args$CNA)
 print(dfQC)
 
 render("/data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/report.Rmd",
@@ -18,4 +23,4 @@ render("/data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/report.Rmd",
     output_file = basename(args$output),
     intermediates_dir = dirname(args$output),
     clean = FALSE,
-    params = list(dfQC = dfQC))
+    params = list(dfQC = dfQC, CNA = CNA, plotdir = args$plotdir))

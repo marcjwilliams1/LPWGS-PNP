@@ -5,4 +5,8 @@
 fastqfiles: "/data/BCI-EvoCa2/marc/anisha/fastqfiles/"
 log_dir: "logs/"
 genome: "/data/BCI-EvoCa2/marc/refs/hg19/ucsc.hg19.fasta"
-binsize: "500"
+binsize: "1000"
+workdirectory: "/data/BCI-EvoCa2/marc/anisha/resultsnew/"
+
+progressors: "-A"
+nonprogressors: "-X|-O"

@@ -6,20 +6,24 @@ output: rmarkdown::html_vignette
 self_contained: false
 params:
     dfQC: !r data.frame(c(1,2,3))
+    CNA: !r data.frame(c(1,2,3))
+    plotdir: !r "."
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.path = args$plotdir
 )
 ```
 
 ```{r}
 library(tidyverse)
 library(cowplot)
+library(QDNAseq)
 dfQC <- params$dfQC
-head(dfQC)
+CNA <- params$CNA
 ```
 
 ```{r coverage, fig.height=6, fig.width=15}
@@ -35,4 +39,110 @@ ggplot(params$dfQC, aes(y = MEAN_INSERT_SIZE, x = samplename)) +
     geom_bar(stat = "identity") +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r duplicationrate, fig.height=6, fig.width=15}
+ggplot(params$dfQC, aes(y = PERCENT_DUPLICATION, x = samplename)) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r frequencyplot, fig.height=6, fig.width=15}
+frequencyPlot(CNA[[7]], gaincol = "firebrick4", losscol = "dodgerblue4")
+```
+
+```{r, echo = FALSE}
+samples <- colnames(QDNAseq:::calls(CNA[[7]]))
+
+sampvecremove <- samples[str_detect(samples, "O83|O101|X51|X53")]
+
+removesamples <- samples %in% sampvecremove
+
+P <- str_detect(samples, "[0-9]+-A") & !removesamples
+NP <- !str_detect(samples, "[0-9]+-A") & !removesamples
+
+x <- CNA[[7]]
+x@phenoData@data <- x@phenoData@data[P, ]
+progressors <- new("QDNAseqCopyNumbers", bins = CNA[[7]]@featureData,
+                        phenodata = x@phenoData,
+                        copynumber = CNA[[7]]@assayData$copynumber[,P],
+                        probgain = CNA[[7]]@assayData$probgain[,P],
+                        probdloss = CNA[[7]]@assayData$probdloss[,P],
+                        probloss = CNA[[7]]@assayData$probloss[,P],
+                        probamp = CNA[[7]]@assayData$probamp[,P],
+                        segmented = CNA[[7]]@assayData$segmented[,P],
+                        calls = CNA[[7]]@assayData$calls[,P])
+QDNAseq:::calls(progressors) <- CNA[[7]]@assayData$calls[,P]
+
+x <- CNA[[7]]
+x@phenoData@data <- x@phenoData@data[NP, ]
+nonprogressors <- new("QDNAseqCopyNumbers", bins = CNA[[7]]@featureData,
+                        phenodata = x@phenoData,
+                        copynumber = CNA[[7]]@assayData$copynumber[,NP],
+                        probgain = CNA[[7]]@assayData$probgain[,NP],
+                        probdloss = CNA[[7]]@assayData$probdloss[,NP],
+                        probloss = CNA[[7]]@assayData$probloss[,NP],
+                        probamp = CNA[[7]]@assayData$probamp[,NP],
+                        segmented = CNA[[7]]@assayData$segmented[,NP],
+                        calls = CNA[[7]]@assayData$calls[,NP])
+QDNAseq:::calls(nonprogressors) <- CNA[[7]]@assayData$calls[,NP]
+```
+
+```{r frequencyplot_progressors, fig.height=6, fig.width=15}
+frequencyPlot(progressors, gaincol = "firebrick4", losscol = "dodgerblue4")
+```
+
+```{r frequencyplot_nonprogressors, fig.height=6, fig.width=15}
+frequencyPlot(nonprogressors, gaincol = "firebrick4", losscol = "dodgerblue4")
+```
+
+
+```{r echo = FALSE}
+getdf <- function(copyNumbersCalled, field = "copynumber", selector = "GC"){
+  x <- as.data.frame(copyNumbersCalled@assayData[[field]])
+  x <- bind_cols(x, copyNumbersCalled@featureData@data %>% select(chromosome, start, end)) %>%
+    mutate(segid = paste(chromosome, start, end, sep = "_")) %>%
+    select(chromosome, start, end, segid, everything()) %>%
+    gather(key = "sample", value = "segmean", contains("GC"))
+
+  return(x)
+}
+
+plotCNfrequency <- function(CNbins, plotChr = NULL, CN_low_cutoff = 1.5, CN_high_cutoff = 2.5){
+
+  cnfreqplot <- CNbins %>%
+    dplyr::select(chromosome, start, end, segmean, sample) %>%
+    na.omit() %>%
+    as.data.frame(.) %>% #GenVisR doesn't seem to like tibble's
+    GenVisR::cnFreq(., genome="hg19",
+                    CN_low_cutoff = CN_low_cutoff, CN_high_cutoff = CN_high_cutoff,
+                    plotChr = plotChr,
+                    CN_Loss_colour = scCN_colors[["CN0"]],
+                    CN_Gain_colour = scCN_colors[["CN5"]])
+  return(cnfreqplot)
+}
+```
+
+```{r boxplot}
+#library(ggforce)
+df <- getdf(CNA[[7]], field = "calls") %>%
+    filter(!sample %in% sampvecremove) %>%
+    mutate(calls = abs(segmean) > 0,
+    outcome = ifelse(str_detect(sample, "[0-9]+-A"), "Progressor", "Non-progressor")) %>%
+    na.omit() %>%
+    group_by(sample, outcome) %>%
+    summarize(altered = sum(calls), tot = n()) %>%
+    mutate(pctaltered = altered / tot)
+
+(gp <- df %>%
+  ggplot(aes(x = outcome, y = pctaltered, fill = outcome)) +
+  geom_point() +
+  geom_boxplot(alpha = 0.7) +
+  xlab("") +
+  ylab("% Genome altered") +
+  geom_text(aes(x = 1.5, y= 0.15), label = "p = 0.45") +
+  scale_fill_manual(values = c("deepskyblue4", "darkorange3")) +
+  theme(legend.position="none"))
+
 ```

@@ -39,7 +39,7 @@ rule align:
         samtools view -S -b - > {output}.temp.bam
 
         module load java
-        java -jar -Xmx4G $PICARD AddOrReplaceReadGroups \
+        java -jar -Xmx2G $PICARD AddOrReplaceReadGroups \
            I={output}.temp.bam \
            O={output} \
            RGID={wildcards.sample} \
