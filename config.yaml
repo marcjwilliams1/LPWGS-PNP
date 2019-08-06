@@ -8,5 +8,8 @@ genome: "/data/BCI-EvoCa2/marc/refs/hg19/ucsc.hg19.fasta"
 binsize: "1000"
 workdirectory: "/data/BCI-EvoCa2/marc/anisha/resultsnew/"
 
-progressors: "-A"
-nonprogressors: "-X|-O"
+
+progressors: "A"
+nonprogressors: "X,O"
+
+readscutoff: "3e6"

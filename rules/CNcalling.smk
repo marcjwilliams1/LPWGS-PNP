@@ -15,6 +15,25 @@ rule CNcalling:
     shell:
         """
         module load R
+        echo {params.filterP}
+        echo {params.filterNP}
+
+        Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
+            --bamfiles {input.bams} \
+            --binsize {params.binsize} \
+            --plotdir {output.plotdirNP} \
+            --Rdata {output.Rdata}.NP.Rdata \
+            --segmentfile {output.segmentfile}.NP.txt \
+            --filter {params.filterNP}
+
+        Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
+            --bamfiles {input.bams} \
+            --binsize {params.binsize} \
+            --plotdir {output.plotdirP} \
+            --Rdata {output.Rdata}.P.Rdata \
+            --segmentfile {output.segmentfile}.NP.txt \
+            --filter {params.filterP}
+
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
             --bamfiles {input.bams} \
             --binsize {params.binsize} \
@@ -22,20 +41,4 @@ rule CNcalling:
             --Rdata {output.Rdata} \
             --segmentfile {output.segmentfile} \
             --filter ""
-
-        Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
-            --bamfiles {input.bams} \
-            --binsize {params.binsize} \
-            --plotdir {output.plotdirP} \
-            --Rdata {output.Rdata} \
-            --segmentfile {output.segmentfile} \
-            --filter {params.filterP}
-
-        Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
-            --bamfiles {input.bams} \
-            --binsize {params.binsize} \
-            --plotdir {output.plotdirNP} \
-            --Rdata {output.Rdata} \
-            --segmentfile {output.segmentfile} \
-            --filter {params.filterNP}
         """
