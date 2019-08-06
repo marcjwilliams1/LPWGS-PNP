@@ -38,13 +38,6 @@ ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = samplename)) +
     geom_hline(yintercept = 0.1, lty = 2, col = 'firebrick')
 ```
 
-```{r insertsize, fig.height=6, fig.width=15, echo = FALSE, results = "hide"}
-ggplot(params$dfQC, aes(y = MEDIAN_INSERT_SIZE, x = samplename)) +
-    geom_bar(stat = "identity") +
-    theme_cowplot() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
 ```{r duplicationrate, fig.height=6, fig.width=15, echo = FALSE}
 ggplot(params$dfQC, aes(y = PERCENT_DUPLICATION, x = samplename)) +
     geom_bar(stat = "identity") +
