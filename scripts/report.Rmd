@@ -205,3 +205,27 @@ Boxplot for pct altered.
   scale_fill_manual(values = c("deepskyblue4", "darkorange3")) +
   theme(legend.position="none"))
 ```
+
+## Summary table of all data
+
+```{r createdataframe2, echo = FALSE}
+#library(ggforce)
+df <- getdf(CNA[[7]], field = "calls") %>%
+    mutate(calls = abs(segmean) > 0,
+    callsloss = segmean < 0,
+    callsgain = segmean > 0,
+    outcome = ifelse(str_detect(sample, "[0-9]+-A"), "Progressor", "Non-progressor")) %>%
+    na.omit() %>%
+    group_by(sample, outcome) %>%
+    summarize(alteredbins = sum(calls), totbins = n(),
+              gainsbins = sum(callsgain),
+              lossbins = sum(callsloss)) %>%
+    mutate(pctaltered = alteredbins / totbins) %>%
+    rename(samplename = sample)
+
+df <- left_join(df, select(dfQC, samplename, TOTAL_READS, MEAN_COVERAGE, PERCENT_DUPLICATION))
+
+write_csv(df, paste0(args$plotdir, "adenoma_progressorsQDNAseq.csv"))
+
+knitr::kable(df)
+```
