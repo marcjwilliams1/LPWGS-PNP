@@ -12,7 +12,7 @@ workdir: config["workdirectory"]
 
 fastqfiles = [f for f in glob.glob(config["fastqfiles"] + "/*.gz", recursive=True)]
 (FILES,)=glob_wildcards(config["fastqfiles"] + "{FILES}_R1_001.fastq.gz")
-(SAMPLES,S,LANES)=glob_wildcards(config["fastqfiles"] + "{SAMPLES}_{S}_{LANES}_R1_001.fastq.gz")
+(RUNID,SAMPLES,S,LANES)=glob_wildcards(config["fastqfiles"] + "GC-{RUNID}-{SAMPLES}_{S}_{LANES}_R1_001.fastq.gz")
 
 runid=["_{}_{}".format(a_, b_) for a_, b_ in zip(S, LANES)]
 
@@ -20,10 +20,10 @@ SAMPLES=list(set(SAMPLES))
 #LANES=list(set(LANES))
 
 def _get_matches(wildcards):
-    return glob.glob(config["fastqfiles"] + wildcards.sample + "*.bam")
+    return glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "*.bam")
 
-def _get_matches(x):
-    return glob.glob(config["fastqfiles"] + x + "*R1*.fastq.gz")
+#def _get_matches(x):
+#    return glob.glob(config["fastqfiles"] + "*" + x + "*R1*.fastq.gz")
 
 
 rule all:
