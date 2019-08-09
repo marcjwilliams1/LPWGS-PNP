@@ -28,16 +28,11 @@ def _get_matches(wildcards):
 
 rule all:
     input:
-        #expand("fastQC/{file}_R1_001_fastqc.html", file = FILES),
-        #expand("tempbams/{file}.bam", file = FILES),
+        expand("fastQC/{sample}/", sample = SAMPLES),
         expand("bams/3.final/{sample}.bam", sample = SAMPLES),
-        #expand("QC/WGSmetrics/{sample}.txt", sample = SAMPLES),
         Rdata="CNcalling/finalresults." + config["binsize"] + ".Rdata",
-        #QC="QC/QCresults.csv",
         report="reports/results.html"
-        #expand("bams/{sample}.dedup.bam", sample = SAMPLES)
-        # The first rule should define the default target files
-        # Subsequent target rules can be specified below. They should start with all_*.
+
 
 include: "rules/fastQC.smk"
 include: "rules/align.smk"
