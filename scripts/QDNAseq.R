@@ -2,6 +2,7 @@ library(QDNAseq)
 library(methods)
 library(dplyr)
 library(argparse)
+library(stringr)
 source("/data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/blacklist.R")
 
 parser <- ArgumentParser(description = "Parse arguments for QDNAseq analysis")
@@ -14,6 +15,8 @@ parser$add_argument('--plotdir', type = 'character',
 parser$add_argument('--Rdata', type = 'character',
                     help="Rdata file", default = NULL)
 parser$add_argument('--segmentfile', type = 'character',
+                    help="Text file for segments", default = NULL)
+parser$add_argument('--filter', type = 'character',nargs = "+",
                     help="Text file for segments", default = NULL)
 args <- parser$parse_args()
 
@@ -29,21 +32,22 @@ if (dir.exists(plotdir) == FALSE){
   dir.create(plotdir, recursive = T)
 }
 
+args$filter <- paste0("-", gsub(",", "-[0-9]+|", args$filter), "[0-9]+")
+print(args$filter)
+print(str_detect(args$bamfiles, args$filter))
+
+args$bamfiles <- args$bamfiles[str_detect(args$bamfiles, args$filter)]
+print(args$bamfiles)
+
 basenames <- basename(args$bamfiles)
 basenames <- sub(sprintf('[\\.]?%s$', "bam"), '', basenames)
 bamnames <- c()
-for (i in basenames){
-    x <-strsplit(i, "-")[[1]]
-    bamnames <- c(bamnames, x[length(x)])
-}
+bamnames <- basenames
+#for (i in basenames){
+#    x <-strsplit(i, "-")[[1]]
+#    bamnames <- c(bamnames, x[length(x)])
+#}
 print(bamnames)
-
-phenodata2 <- data.frame(name=bamnames, row.names=bamnames,
-        stringsAsFactors=FALSE)
-print("Printing phenodata")
-print(phenodata2)
-print("Finished print")
-
 
 #download bin annotations
 bins <- getBinAnnotations(binSize = as.numeric(args$binsize))
@@ -96,19 +100,25 @@ print("bins segmented")
 copyNumbersSegmented <- normalizeSegmentedBins(copyNumbersSegmented)
 
 pdf(paste(plotdir,"/","segments",".pdf",sep=""),7,4)
-plot(copyNumbersSegmented, ylim=c(-2,2))
+plot(copyNumbersSegmented, ylim=c(-2,2), gaincol = "firebrick3", losscol = "dodgerblue3", delcol="dodgerblue4", ampcol = "firebrick4")
 dev.off()
 
 copyNumbersCalled <- callBins(copyNumbersSegmented)
 pdf(paste(plotdir,"/","copy_numbercalls",".pdf",sep=""),7,4)
-plot(copyNumbersCalled, ylim=c(-2,2))
+plot(copyNumbersCalled, ylim=c(-2,2), gaincol = "firebrick3", losscol = "dodgerblue3", delcol="dodgerblue4", ampcol = "firebrick4")
 dev.off()
 
-output <- list(readCounts, readCountsFiltered, copyNumbers, copyNumbersNormalized, copyNumbersSmooth, copyNumbersSegmented, copyNumbersCalled)
+output <- list(readCounts = readCounts,
+               readCountsFiltered = readCountsFiltered,
+               copyNumbers = copyNumbers,
+               copyNumbersNormalized = copyNumbersNormalized,
+               copyNumbersSmooth = copyNumbersSmooth,
+               copyNumbersSegmented = copyNumbersSegmented,
+               copyNumbersCalled = copyNumbersCalled)
 saveRDS(output, file = args$Rdata)
 
 exportBins(copyNumbersSmooth, file=args$segmentfile)
 
 pdf(paste(plotdir,"/","frequencyplot",".pdf",sep=""),7,4)
-frequencyPlot(copyNumbersCalled)
+frequencyPlot(copyNumbersCalled, gaincol = "firebrick3", losscol = "dodgerblue3", delcol="dodgerblue4", ampcol = "firebrick4")
 dev.off()
