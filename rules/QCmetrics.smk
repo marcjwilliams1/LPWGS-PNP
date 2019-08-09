@@ -7,7 +7,9 @@ rule QCmetrics:
         metricsAlign="QC/alignmentmetrics/{sample}.txt",
         metricsQS="QC/qualityscoremetrics/{sample}.txt",
     threads: 1
-    params: genome=config["genome"]
+    params:
+        genome=config["genome"],
+        picard=config["picard"]
     shell:
         """
         longLine="--------------------"
@@ -16,7 +18,7 @@ rule QCmetrics:
 
         msg="Run picard CollectWGSMetrics"; echo "-- $msg $longLine"; >&2 echo "-- $msg $longLine"
 
-        java -jar -Xmx4G $PICARD CollectWgsMetrics \
+        java -jar -Xmx4G {params.picard} CollectWgsMetrics \
             INPUT={input.bam} \
             OUTPUT={output.metricsWGS}.temp \
             R={params.genome}
@@ -25,7 +27,7 @@ rule QCmetrics:
 
 
         msg="Run picard insertsize metrics"; echo "-- $msg $longLine"; >&2 echo "-- $msg $longLine"
-        java -jar -Xmx4G $PICARD CollectInsertSizeMetrics \
+        java -jar -Xmx4G {params.picard} CollectInsertSizeMetrics \
             INPUT={input.bam} \
             OUTPUT={output.metricsInsert}.temp \
             H={output.metricsInsert}.pdf
@@ -33,7 +35,7 @@ rule QCmetrics:
         rm {output.metricsInsert}.temp
 
         msg="Run picard CollectAlignmentSummaryMetrics"; echo "-- $msg $longLine"; >&2 echo "-- $msg $longLine"
-        java -jar -Xmx4G $PICARD CollectAlignmentSummaryMetrics \
+        java -jar -Xmx4G {params.picard} CollectAlignmentSummaryMetrics \
             INPUT={input.bam} \
             OUTPUT={output.metricsAlign}.temp \
             ADAPTER_SEQUENCE=[CTGTCTCTTATA,TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG,GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG,AGATCGGAAGAGC,ACGCTCTTCCGATCT] \
@@ -42,7 +44,7 @@ rule QCmetrics:
         rm {output.metricsAlign}.temp
 
         msg="Run picard QualityScoreDistribution"; echo "-- $msg $longLine"; >&2 echo "-- $msg $longLine"
-        java -jar -Xmx4G $PICARD QualityScoreDistribution \
+        java -jar -Xmx4G {params.picard} QualityScoreDistribution \
             INPUT={input.bam} \
             OUTPUT={output.metricsQS} \
             CHART={output.metricsQS}.pdf
@@ -57,10 +59,13 @@ rule combineQCmetrics:
             metricsDedup=expand("QC/dedupmetrics/{sample}.txt", sample = SAMPLES),
         output:
             "QC/QCresults.csv"
+        params:
+            singularityimage=config["singularityR"]
         threads: 1
         shell:
             """
-            module load R
+            module load singularity
+            singularity exec {params.singularityimage} \
             Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/combineQC.R \
                 --WGS {input.metricsWGS} \
                 --insertsize {input.metricsInsert} \

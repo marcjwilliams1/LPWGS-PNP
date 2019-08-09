@@ -1,7 +1,7 @@
 def _get_matchesR1(wildcards):
-    return sorted(glob.glob(config["fastqfiles"] + wildcards.sample + "*R1*.fastq.gz"))
+    return sorted(glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "*R1*.fastq.gz"))
 def _get_matchesR2(wildcards):
-    return sorted(glob.glob(config["fastqfiles"] + wildcards.sample + "*R1*.fastq.gz"))
+    return sorted(glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "*R1*.fastq.gz"))
 
 rule mergefastq:
     input:
@@ -13,8 +13,12 @@ rule mergefastq:
     shell:
         """
         echo "Merging fastq files R1"
+        echo "fastq files: "
+        echo {input.R1}
         cat {input.R1} > {output.tempfastqR1}
         echo "Merging fastq files R2"
+        echo "fastq files: "
+        echo {input.R2}
         cat {input.R2} > {output.tempfastqR2}
         echo "Finished merging fastqfiles"
         """
@@ -27,7 +31,8 @@ rule align:
         "bams/1.align/{sample}.bam"
     threads: 4
     params:
-        genome=config["genome"]
+        genome=config["genome"],
+        picard=config["picard"]
     shell:
         """
         module load bwa/0.7.15
@@ -39,7 +44,7 @@ rule align:
         samtools view -S -b - > {output}.temp.bam
 
         module load java
-        java -jar -Xmx2G $PICARD AddOrReplaceReadGroups \
+        java -jar -Xmx2G {params.picard} AddOrReplaceReadGroups \
            I={output}.temp.bam \
            O={output} \
            RGID={wildcards.sample} \
@@ -58,10 +63,12 @@ rule sortbam:
         bam="bams/1.align/{sample}.bam",
     output:
         bam="bams/2.sorted/{sample}.bam"
+    params:
+        picard=config["picard"]
     shell:
         """
         module load java
-        java -jar -Xmx4G $PICARD SortSam \
+        java -jar -Xmx4G {params.picard} SortSam \
             INPUT={input.bam} \
             OUTPUT={output.bam} \
             SORT_ORDER=coordinate
@@ -73,11 +80,13 @@ rule indexdedupbam:
     output:
         bam="bams/3.final/{sample}.bam",
         metrics="QC/dedupmetrics/{sample}.txt"
+    params:
+        picard=config["picard"]
     threads: 1
     shell:
         """
         module load java
-        java -jar -Xmx4G $PICARD MarkDuplicates \
+        java -jar -Xmx4G {params.picard} MarkDuplicates \
             INPUT={input.bam} \
             OUTPUT={output.bam} \
             METRICS_FILE={output.metrics}.temp \

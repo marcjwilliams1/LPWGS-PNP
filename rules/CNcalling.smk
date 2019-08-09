@@ -11,13 +11,16 @@ rule CNcalling:
     params:
         binsize=config["binsize"],
         filterP=config["progressors"],
-        filterNP=config["nonprogressors"]
+        filterNP=config["nonprogressors"],
+        singularityimage=config["singularityR"]
     shell:
         """
         module load R
+        module load singularity
         echo {params.filterP}
         echo {params.filterNP}
 
+        singularity exec {params.singularityimage} \
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
             --bamfiles {input.bams} \
             --binsize {params.binsize} \
@@ -26,6 +29,7 @@ rule CNcalling:
             --segmentfile {output.segmentfile}.NP.txt \
             --filter {params.filterNP}
 
+        singularity exec {params.singularityimage} \
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
             --bamfiles {input.bams} \
             --binsize {params.binsize} \
@@ -34,6 +38,7 @@ rule CNcalling:
             --segmentfile {output.segmentfile}.NP.txt \
             --filter {params.filterP}
 
+        singularity exec {params.singularityimage} \
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
             --bamfiles {input.bams} \
             --binsize {params.binsize} \

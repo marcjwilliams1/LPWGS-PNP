@@ -7,12 +7,13 @@ rule report:
         report="reports/results.html",
         plotdir=directory(config["workdirectory"] + "reports/plots/")
     params:
-        readscutoff=config["readscutoff"]
+        readscutoff=config["readscutoff"],
+        singularityimage=config["singularityR"]
     shell:
         """
         #mkdir {output.plotdir}
         module load singularity
-        singularity exec /data/BCI-EvoCa2/marc/singularity/marcjwilliams1-r-tidy-markdown-bio-master-latest.simg \
+        singularity exec {params.singularityimage} \
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/report.R \
             --QC {input.QC} \
             --output {output.report} \
