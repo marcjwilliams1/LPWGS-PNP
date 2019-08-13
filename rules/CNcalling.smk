@@ -24,19 +24,19 @@ rule CNcalling:
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
             --bamfiles {input.bams} \
             --binsize {params.binsize} \
-            --plotdir {output.plotdirNP} \
-            --Rdata {output.Rdata}.NP.Rdata \
+            --plotdir {output.plotdirP} \
+            --Rdata {output.Rdata}.P.Rdata \
             --segmentfile {output.segmentfile}.NP.txt \
-            --filter {params.filterNP}
+            --filter {params.filterP}
 
         singularity exec {params.singularityimage} \
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \
             --bamfiles {input.bams} \
             --binsize {params.binsize} \
-            --plotdir {output.plotdirP} \
-            --Rdata {output.Rdata}.P.Rdata \
+            --plotdir {output.plotdirNP} \
+            --Rdata {output.Rdata}.NP.Rdata \
             --segmentfile {output.segmentfile}.NP.txt \
-            --filter {params.filterP}
+            --filter {params.filterNP}
 
         singularity exec {params.singularityimage} \
         Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/QDNAseq.R \

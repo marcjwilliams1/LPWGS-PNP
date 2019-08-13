@@ -28,11 +28,13 @@ args <- parser$parse_args()
 plotdir <- args$plotdir
 print(plotdir)
 
+print(paste0("Number of bam files: ", length(args$bamfiles)))
+
 if (dir.exists(plotdir) == FALSE){
   dir.create(plotdir, recursive = T)
 }
 
-args$filter <- paste0("-", gsub(",", "-[0-9]+|", args$filter), "[0-9]+")
+args$filter <- paste0(gsub(",", "[0-9]+|", args$filter), "[0-9]+")
 print(args$filter)
 print(str_detect(args$bamfiles, args$filter))
 
