@@ -1,0 +1,65 @@
+__default__:
+    time: "5:00:00"
+    mem: 8G
+    resources: "\"span[hosts=1]\""
+    name: "{rule}_snakemake"
+    output: "{config[log_dir]}/{rule}/{rule}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.out"
+
+fastQC:
+    time: "1:00:00"
+    mem: 1G
+    resources: "\"span[hosts=1]\""
+    output: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+
+mergefastq:
+    time: "1:00:00"
+    mem: 4G
+    resources: "\"span[hosts=1]\""
+    output: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+
+
+QCmetrics:
+    time: "1:00:00"
+    mem: 6G
+    resources: "\"span[hosts=1]\""
+    output: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+
+sortbam:
+    time: "5:00:00"
+    mem: 6G
+    output: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+
+align:
+    time: "5:00:00"
+    mem: 5G
+    output: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+
+indexdedupbam:
+    time: "5:00:00"
+    mem: 8G
+    output: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.{wildcards.sample}.out"
+
+CNcalling:
+    time: "10:00:00"
+    mem: 10G
+    output: "{config[log_dir]}/{rule}/{rule}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.out"
+
+combineQCmetrics:
+    time: "1:00:00"
+    mem: 1G
+    output: "{config[log_dir]}/{rule}/{rule}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.out"
+
+report:
+    time: "1:00:00"
+    mem: 4G
+    output: "{config[log_dir]}/{rule}/{rule}.out"
+    error: "{config[log_dir]}/{rule}/{rule}.out"
