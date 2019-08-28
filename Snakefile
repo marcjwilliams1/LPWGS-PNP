@@ -22,5 +22,5 @@ rule all:
 include: "rules/fastQC.smk"
 include: "rules/align.smk"
 include: "rules/QCmetrics.smk"
-include: "rules/CNcalling.smk"
-include: "rules/report.smk"
+include: "rules/CNcalling-basic.smk"
+#include: "rules/report.smk"
