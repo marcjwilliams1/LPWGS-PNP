@@ -5,8 +5,6 @@ rule CNcalling:
         Rdata="CNcalling/finalresults." + config["binsize"] + ".Rdata",
         segmentfile="CNcalling/finalresults." + config["binsize"] + ".segments.txt",
         plotdir=directory("CNcalling/plots/binsize" + config["binsize"]),
-        plotdirP=directory("CNcalling/plotsP/binsize" + config["binsize"]),
-        plotdirNP=directory("CNcalling/plotsNP/binsize" + config["binsize"])
     threads: 1
     params:
         binsize=config["binsize"],
