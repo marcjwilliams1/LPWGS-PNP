@@ -108,7 +108,7 @@ plotCNfrequency <- function(CNbins, plotChr = NULL, CN_low_cutoff = 1.5, CN_high
 #library(ggforce)
 df <- getdf(CNA[[7]], field = "calls") %>%
     filter(!sample %in% sampvecremove) %>%
-    mutate(calls = abs(segmean) > 0,
+    mutate(calls = abs(segmean) > 0) %>%
     na.omit() %>%
     group_by(sample) %>%
     summarize(alteredbins = sum(calls), totbins = n()) %>%
