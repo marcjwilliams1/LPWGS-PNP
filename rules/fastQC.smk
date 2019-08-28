@@ -1,7 +1,7 @@
 def _get_matchesR1(wildcards):
     return sorted(glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "_*R1*.fastq.gz"))
 def _get_matchesR2(wildcards):
-    return sorted(glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "_*R1*.fastq.gz"))
+    return sorted(glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "_*R2*.fastq.gz"))
 
 rule fastQC:
     input:

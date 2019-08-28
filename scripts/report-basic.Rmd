@@ -1,0 +1,145 @@
+---
+title: "Results report for lpWGS of progressor/non-progressor Adenomas"
+author: "Marc J Williams"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+self_contained: false
+params:
+    dfQC: data.frame(c(1,2,3))
+    CNA: data.frame(c(1,2,3))
+    plotdir: !r getwd()
+    readscutoff: 3e6
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = args$plotdir
+)
+```
+
+```{r, echo = FALSE}
+library(tidyverse)
+library(cowplot)
+library(QDNAseq)
+dfQC <- params$dfQC
+CNA <- params$CNA
+readscutoff <- as.numeric(params$readscutoff)
+```
+
+## QC plots
+
+```{r coverage, fig.height=6, fig.width=15, echo = FALSE}
+ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = fct_reorder(samplename, MEAN_COVERAGE, .desc = TRUE))) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(yintercept = 0.1, lty = 2, col = 'firebrick') +
+    xlab("Mean Coverage")
+```
+
+```{r duplicationrate, fig.height=6, fig.width=15, echo = FALSE}
+ggplot(params$dfQC, aes(y = PERCENT_DUPLICATION, x = fct_reorder(samplename, MEAN_COVERAGE, .desc = TRUE))) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("% Duplicates")
+```
+
+```{r totalreads, fig.height=6, fig.width=15, echo = FALSE}
+ggplot(params$dfQC, aes(y = TOTAL_READS, x = fct_reorder(samplename, MEAN_COVERAGE, .desc = TRUE))) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(yintercept = readscutoff, lty = 2, col = 'firebrick') +
+    xlab("Total reads")
+```
+
+## Frequency plots
+Frequency plot across whole cohort.
+
+```{r frequencyplot, fig.height=6, fig.width=15, echo = FALSE}
+frequencyPlot(CNA[[7]], gaincol = "firebrick4", losscol = "dodgerblue4")
+```
+
+Due to low coverage (`<` `r params$readscutoff` reads) we will remove the following samples:
+```{r, echo = FALSE}
+knitr::kable(filter(params$dfQC, TOTAL_READS < readscutoff) %>% select(samplename, TOTAL_READS, MEAN_COVERAGE, PERCENT_DUPLICATION) %>%
+arrange(TOTAL_READS))
+```
+
+```{r, echo = FALSE}
+samples <- colnames(QDNAseq:::calls(CNA[[7]]))
+sampvecremove2 <- samples[samples %in% (filter(params$dfQC, TOTAL_READS < readscutoff) %>% pull(samplename))]
+sampvecremove <- unique(c(sampvecremove2))
+removesamples <- samples %in% sampvecremove
+```
+
+
+```{r echo = FALSE}
+getdf <- function(copyNumbersCalled, field = "copynumber"){
+  x <- as.data.frame(copyNumbersCalled@assayData[[field]])
+  x <- bind_cols(x, copyNumbersCalled@featureData@data %>% select(chromosome, start, end)) %>%
+    mutate(segid = paste(chromosome, start, end, sep = "_")) %>%
+    select(chromosome, start, end, segid, everything()) %>%
+    gather(key = "sample", value = "segmean", -chromosome, -start, -end, -segid)
+
+  return(x)
+}
+
+
+plotCNfrequency <- function(CNbins, plotChr = NULL, CN_low_cutoff = 1.5, CN_high_cutoff = 2.5){
+
+  cnfreqplot <- CNbins %>%
+    dplyr::select(chromosome, start, end, segmean, sample) %>%
+    na.omit() %>%
+    as.data.frame(.) %>% #GenVisR doesn't seem to like tibble's
+    GenVisR::cnFreq(., genome="hg19",
+                    CN_low_cutoff = CN_low_cutoff, CN_high_cutoff = CN_high_cutoff,
+                    plotChr = plotChr,
+                    CN_Loss_colour = scCN_colors[["CN0"]],
+                    CN_Gain_colour = scCN_colors[["CN5"]])
+  return(cnfreqplot)
+}
+```
+
+```{r createdataframe, echo = FALSE}
+#library(ggforce)
+df <- getdf(CNA[[7]], field = "calls") %>%
+    filter(!sample %in% sampvecremove) %>%
+    mutate(calls = abs(segmean) > 0,
+    na.omit() %>%
+    group_by(sample) %>%
+    summarize(alteredbins = sum(calls), totbins = n()) %>%
+    mutate(pctaltered = alteredbins / totbins)
+```
+
+## Summary table
+
+```{r, echo = FALSE}
+knitr::kable(df)
+```
+
+## Summary table of all data
+
+```{r createdataframe2, echo = FALSE}
+#library(ggforce)
+df <- getdf(CNA[[7]], field = "calls") %>%
+    mutate(calls = abs(segmean) > 0,
+    callsloss = segmean < 0,
+    callsgain = segmean > 0,
+    na.omit() %>%
+    group_by(sample) %>%
+    summarize(alteredbins = sum(calls), totbins = n(),
+              gainsbins = sum(callsgain),
+              lossbins = sum(callsloss)) %>%
+    mutate(pctaltered = alteredbins / totbins) %>%
+    rename(samplename = sample)
+
+df <- left_join(df, select(dfQC, samplename, TOTAL_READS, MEAN_COVERAGE, PERCENT_DUPLICATION))
+
+write_csv(df, paste0(args$plotdir, "QDNAseq_results.csv"))
+
+knitr::kable(df)
+```
