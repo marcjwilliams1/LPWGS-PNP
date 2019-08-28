@@ -28,6 +28,7 @@ rule CNcalling:
             --plotdir {output.plotdirP} \
             --Rdata {output.Rdata}.P.Rdata \
             --segmentfile {output.segmentfile}.NP.txt \
+            --pipelinedirectory {params.pipelinedirectory} \
             --filter {params.filterP}
 
         singularity exec {params.singularityimage} \
@@ -37,6 +38,7 @@ rule CNcalling:
             --plotdir {output.plotdirNP} \
             --Rdata {output.Rdata}.NP.Rdata \
             --segmentfile {output.segmentfile}.NP.txt \
+            --pipelinedirectory {params.pipelinedirectory} \
             --filter {params.filterNP}
 
         singularity exec {params.singularityimage} \
@@ -46,5 +48,6 @@ rule CNcalling:
             --plotdir {output.plotdir} \
             --Rdata {output.Rdata} \
             --segmentfile {output.segmentfile} \
+            --pipelinedirectory {params.pipelinedirectory} \
             --filter ""
         """

@@ -31,26 +31,29 @@ readscutoff <- as.numeric(params$readscutoff)
 ## QC plots
 
 ```{r coverage, fig.height=6, fig.width=15, echo = FALSE}
-ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = samplename)) +
+ggplot(params$dfQC, aes(y = MEAN_COVERAGE, x = fct_reorder(samplename, MEAN_COVERAGE, .desc = TRUE))) +
     geom_bar(stat = "identity") +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    geom_hline(yintercept = 0.1, lty = 2, col = 'firebrick')
+    geom_hline(yintercept = 0.1, lty = 2, col = 'firebrick') +
+    xlab("Mean Coverage")
 ```
 
 ```{r duplicationrate, fig.height=6, fig.width=15, echo = FALSE}
-ggplot(params$dfQC, aes(y = PERCENT_DUPLICATION, x = samplename)) +
-    geom_bar(stat = "identity") +
-    theme_cowplot() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-```{r totalreads, fig.height=6, fig.width=15, echo = FALSE}
-ggplot(params$dfQC, aes(y = TOTAL_READS, x = samplename)) +
+ggplot(params$dfQC, aes(y = PERCENT_DUPLICATION, x = fct_reorder(samplename, MEAN_COVERAGE, .desc = TRUE))) +
     geom_bar(stat = "identity") +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    geom_hline(yintercept = readscutoff, lty = 2, col = 'firebrick')
+    xlab("% Duplicates")
+```
+
+```{r totalreads, fig.height=6, fig.width=15, echo = FALSE}
+ggplot(params$dfQC, aes(y = TOTAL_READS, x = fct_reorder(samplename, MEAN_COVERAGE, .desc = TRUE))) +
+    geom_bar(stat = "identity") +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(yintercept = readscutoff, lty = 2, col = 'firebrick') +
+    xlab("Total reads")
 ```
 
 ## Frequency plots
@@ -68,8 +71,8 @@ sampvecremove2 <- samples[samples %in% (filter(params$dfQC, TOTAL_READS < readsc
 sampvecremove <- unique(c(sampvecremove1, sampvecremove2))
 removesamples <- samples %in% sampvecremove
 
-P <- str_detect(samples, "[0-9]+-A") & !removesamples
-NP <- !str_detect(samples, "[0-9]+-A") & !removesamples
+P <- str_detect(samples, "^A[0-9]+") & !removesamples
+NP <- !str_detect(samples, "^A[0-9]+") & !removesamples
 ```
 
 Due to low coverage (`<` `r params$readscutoff` reads) we will remove the following samples:
@@ -79,7 +82,7 @@ arrange(TOTAL_READS))
 ```
 
 
-```{r, echo = FALSE, results = "hide"}
+```{r}
 print(samples)
 print(sampvecremove)
 print(sampvecremove1)
@@ -130,12 +133,12 @@ frequencyPlot(nonprogressors, gaincol = "firebrick4", losscol = "dodgerblue4")
 
 
 ```{r echo = FALSE}
-getdf <- function(copyNumbersCalled, field = "copynumber", selector = "GC"){
+getdf <- function(copyNumbersCalled, field = "copynumber"){
   x <- as.data.frame(copyNumbersCalled@assayData[[field]])
   x <- bind_cols(x, copyNumbersCalled@featureData@data %>% select(chromosome, start, end)) %>%
     mutate(segid = paste(chromosome, start, end, sep = "_")) %>%
     select(chromosome, start, end, segid, everything()) %>%
-    gather(key = "sample", value = "segmean", contains("GC"))
+    gather(key = "sample", value = "segmean", -chromosome, -start, -end, -segid)
 
   return(x)
 }
@@ -156,13 +159,12 @@ plotCNfrequency <- function(CNbins, plotChr = NULL, CN_low_cutoff = 1.5, CN_high
 }
 ```
 
-
 ```{r createdataframe, echo = FALSE}
 #library(ggforce)
 df <- getdf(CNA[[7]], field = "calls") %>%
     filter(!sample %in% sampvecremove) %>%
     mutate(calls = abs(segmean) > 0,
-    outcome = ifelse(str_detect(sample, "[0-9]+-A"), "Progressor", "Non-progressor")) %>%
+    outcome = ifelse(str_detect(sample, "^A[0-9]+"), "Progressor", "Non-progressor")) %>%
     na.omit() %>%
     group_by(sample, outcome) %>%
     summarize(alteredbins = sum(calls), totbins = n()) %>%
@@ -214,7 +216,7 @@ df <- getdf(CNA[[7]], field = "calls") %>%
     mutate(calls = abs(segmean) > 0,
     callsloss = segmean < 0,
     callsgain = segmean > 0,
-    outcome = ifelse(str_detect(sample, "[0-9]+-A"), "Progressor", "Non-progressor")) %>%
+    outcome = ifelse(str_detect(sample, "A[0-9]+"), "Progressor", "Non-progressor")) %>%
     na.omit() %>%
     group_by(sample, outcome) %>%
     summarize(alteredbins = sum(calls), totbins = n(),
