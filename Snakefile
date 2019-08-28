@@ -7,9 +7,6 @@ configfile: "config.yaml"
 report: "report/workflow.rst"
 workdir: config["workdirectory"]
 
-# Allow users to fix the underlying OS via singularity.
-#singularity: "docker://continuumio/miniconda3"
-
 (RUNID,SAMPLES,S,LANES)=glob_wildcards(config["fastqfiles"] + "GC-{RUNID}-{SAMPLES}_{S}_{LANES}_R1_001.fastq.gz")
 
 SAMPLES=list(set(SAMPLES))
