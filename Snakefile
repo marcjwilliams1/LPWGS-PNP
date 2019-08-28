@@ -12,16 +12,7 @@ workdir: config["workdirectory"]
 
 (RUNID,SAMPLES,S,LANES)=glob_wildcards(config["fastqfiles"] + "GC-{RUNID}-{SAMPLES}_{S}_{LANES}_R1_001.fastq.gz")
 
-runid=["_{}_{}".format(a_, b_) for a_, b_ in zip(S, LANES)]
-
 SAMPLES=list(set(SAMPLES))
-
-def _get_matches(wildcards):
-    return glob.glob(config["fastqfiles"] + "*" + wildcards.sample + "*.bam")
-
-# def _get_matches(x):
-#     return glob.glob(config["fastqfiles"] + "*" + x + "_*R1*.fastq.gz")
-
 
 rule all:
     input:
