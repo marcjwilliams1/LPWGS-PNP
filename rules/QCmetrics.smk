@@ -60,13 +60,14 @@ rule combineQCmetrics:
         output:
             "QC/QCresults.csv"
         params:
-            singularityimage=config["singularityR"]
+            singularityimage=config["singularityR"],
+            pipelinedirectory=config["pipelinedirectory"]
         threads: 1
         shell:
             """
             module load singularity
             singularity exec {params.singularityimage} \
-            Rscript /data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/combineQC.R \
+            Rscript {params.pipelinedirectory}/scripts/combineQC.R \
                 --WGS {input.metricsWGS} \
                 --insertsize {input.metricsInsert} \
                 --align {input.metricsAlign} \

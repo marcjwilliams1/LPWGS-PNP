@@ -3,7 +3,6 @@ library(methods)
 library(dplyr)
 library(argparse)
 library(stringr)
-source("/data/BCI-EvoCa2/marc/anisha/LPWGS-PNP/scripts/blacklist.R")
 
 parser <- ArgumentParser(description = "Parse arguments for QDNAseq analysis")
 parser$add_argument('--binsize', type = 'double',
@@ -16,11 +15,13 @@ parser$add_argument('--Rdata', type = 'character',
                     help="Rdata file", default = NULL)
 parser$add_argument('--segmentfile', type = 'character',
                     help="Text file for segments", default = NULL)
+parser$add_argument('--pipelinedirectory', type = 'character',
+                    help="Pipeline directory", default = NULL)
 parser$add_argument('--filter', type = 'character',nargs = "+",
                     help="Text file for segments", default = NULL)
 args <- parser$parse_args()
 
-
+source(paste0(args$pipelinedirectory, "/scripts/blacklist.R"))
 #outdir <- dirname(args$Rdata)
 
 #directory to store plots
